@@ -1,0 +1,32 @@
+import React from 'react';
+
+interface AlertModalProps {
+  isOpen: boolean;
+  message: string;
+  onClose: () => void;
+}
+
+const AlertModal: React.FC<AlertModalProps> = ({ isOpen, message, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+      <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div className="p-6">
+          <h3 className="text-xl font-bold text-sky-400 mb-4">Notice</h3>
+          <p className="text-gray-300 mb-6">{message}</p>
+          <div className="flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-md font-medium transition-colors"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AlertModal;

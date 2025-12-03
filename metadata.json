@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Keyword Analyzer",
+  "description": "An application that sends a prompt to the Gemini API and analyzes the response for a specific keyword or phrase.",
+  "requestFramePermissions": []
+}
