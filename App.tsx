@@ -610,8 +610,6 @@ const App: React.FC = () => {
             if (useSearch && iterationResults[i].citations) {
                 // Calculate Citation Similarity
                 const currentTitles = iterationResults[i].citations!.map(c => c.title);
-                console.log("Citation titles for iteration ", i);
-                console.log(currentTitles);
 
                 iterationResults[i].citationSimilarityScore = calculateSetSimilarity(baselineTitles, currentTitles);
 

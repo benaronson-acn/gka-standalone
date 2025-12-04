@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { AnalysisSession, AnalysisResult, IterationResult, Persona } from '../types';
+import AdvancedAnalysis from './AdvancedAnalysis';
 
 // --- SHARED HELPERS & COMPONENTS ---
 
@@ -20,11 +21,19 @@ const Tooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     </div>
 );
 
+const getScoreColor = (score: number) => {
+    if (score >= 0.9) return 'bg-teal-600/80 text-teal-100';
+    if (score >= 0.7) return 'bg-yellow-600/80 text-yellow-100';
+    return 'bg-orange-600/80 text-orange-100';
+};
+
 
 // --- MULTI-SESSION REPORT COMPONENTS ---
 
 const IterationAccordion: React.FC<{ iteration: IterationResult }> = ({ iteration }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    const hasSimilarityScore = typeof iteration.similarityScore === 'number';
+    const scorePercentage = hasSimilarityScore ? (iteration.similarityScore! * 100).toFixed(0) : 0;
 
     return (
         <div className="bg-gray-900/50 border border-gray-700/50 rounded-lg overflow-hidden">
@@ -34,6 +43,11 @@ const IterationAccordion: React.FC<{ iteration: IterationResult }> = ({ iteratio
             >
                 <span className="text-xs font-medium text-gray-400">Iteration #{iteration.iterationNumber}</span>
                 <div className="flex items-center gap-2">
+                    {hasSimilarityScore && iteration.iterationNumber > 1 && (
+                        <span className={`font-bold px-2 py-0.5 rounded-full text-[10px] ${getScoreColor(iteration.similarityScore!)}`}>
+                            {scorePercentage}% Sim.
+                        </span>
+                    )}
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${iteration.keywordFound ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>{iteration.keywordFoundStatusText}</span>
                     <ChevronIcon className={`h-4 w-4 text-gray-500 ${isExpanded ? 'rotate-180' : ''}`} />
                 </div>
@@ -69,6 +83,7 @@ const MultiPromptAccordion: React.FC<{ result: AnalysisResult }> = ({ result }) 
 const SessionColumn: React.FC<{ session: AnalysisSession; allPersonas?: Persona[] }> = ({ session, allPersonas }) => {
     const [isPromptsExpanded, setIsPromptsExpanded] = useState(false);
     const [isCitationsExpanded, setIsCitationsExpanded] = useState(false);
+    const [isContextExpanded, setIsContextExpanded] = useState(false);
 
     const { stats, personaName } = useMemo(() => {
         const totalIterations = session.results.flatMap(r => r.iterationResults).length;
@@ -111,6 +126,33 @@ const SessionColumn: React.FC<{ session: AnalysisSession; allPersonas?: Persona[
                     <span className="font-semibold text-gray-400">Persona:</span>
                     <span className="text-right italic truncate pl-2" title={personaName}>{personaName}</span>
                 </div>
+                {session.context && (
+                    <div className="pt-2 border-t border-gray-700/50">
+                        {!isContextExpanded ? (
+                            <div className="flex items-center gap-2">
+                                <span className="font-semibold text-gray-400 flex-shrink-0">Context:</span>
+                                <p className="text-gray-400 italic text-xs truncate flex-1 min-w-0 hidden sm:block" title={session.context}>
+                                    {session.context}
+                                </p>
+                                <button onClick={() => setIsContextExpanded(true)} className="text-xs text-sky-400 hover:underline flex-shrink-0 ml-auto">
+                                    Expand
+                                </button>
+                            </div>
+                        ) : (
+                            <div>
+                                <div className="flex justify-between items-center">
+                                    <span className="font-semibold text-gray-400">Context:</span>
+                                    <button onClick={() => setIsContextExpanded(false)} className="text-xs text-sky-400 hover:underline">
+                                        Collapse
+                                    </button>
+                                </div>
+                                <p className="text-gray-400 italic text-xs mt-1 whitespace-pre-wrap bg-black/30 p-2 rounded">
+                                    {session.context}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                )}
                 <div className="flex justify-between items-center">
                     <span className="font-semibold text-gray-400">Web Search:</span>
                     <span className={`font-bold ${session.useSearch ? 'text-green-400' : 'text-red-400'}`}>{session.useSearch ? 'Enabled' : 'Disabled'}</span>
@@ -193,6 +235,8 @@ const MultiReportView: React.FC<{ sessions: AnalysisSession[]; allPersonas?: Per
                         <SessionColumn key={session.id} session={session} allPersonas={allPersonas} />
                     ))}
                 </div>
+
+                <AdvancedAnalysis sessions={sessions} allPersonas={allPersonas} />
             </div>
         </div>
     );
