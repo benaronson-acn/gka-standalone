@@ -6,21 +6,31 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gemini Keyword Analyzer</title>
+    <link rel="stylesheet" href="index.css" type="text/css">
+    <!-- Using TailwindCSS CDN to define global styles using custom CSS variables defined in index.css -->
+    <style type="text/tailwindcss">
+      @layer base {
+        /* --- Global Header/Label Styles --- */
+        h1, h2, h3, h4, h5, h6, label {
+            @apply text-[var(--acn-light-purple)];
+        }
+      }
+    </style>
     <script src="https://cdn.tailwindcss.com"></script>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
-    "marked": "https://aistudiocdn.com/marked@^15.0.0",
-    "dompurify": "https://aistudiocdn.com/dompurify@^3.0.0"
-  }
-}
-</script>
+    <script type="importmap">
+      {
+        "imports": {
+          "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+          "react/": "https://aistudiocdn.com/react@^19.2.0/",
+          "react": "https://aistudiocdn.com/react@^19.2.0",
+          "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
+          "marked": "https://aistudiocdn.com/marked@^15.0.0",
+          "dompurify": "https://aistudiocdn.com/dompurify@^3.0.0"
+        }
+      }
+    </script>
 </head>
-  <body class="bg-gray-900">
+  <body bg="bg-[#141414]">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

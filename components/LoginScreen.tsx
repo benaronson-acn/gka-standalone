@@ -19,11 +19,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="h-screen w-screen bg-gray-900 flex items-center justify-center p-4">
-      <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md p-8 animate-fade-in">
+    <div className="h-screen w-screen bg-[#141414] flex items-center justify-center p-4">
+      <div className="bg-gray-900/50 backdrop-blur-sm border border-[#460073]/50 rounded-xl shadow-2xl w-full max-w-md p-8 animate-fade-in">
         <div className="text-center mb-6">
-          <div className="mx-auto w-12 h-12 bg-sky-900/50 rounded-full flex items-center justify-center mb-4 border border-sky-500/30">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mx-auto w-12 h-12 bg-[#A100FF]/10 rounded-full flex items-center justify-center mb-4 border border-[#A100FF]/20">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#A100FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
@@ -42,7 +42,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-gray-900 border border-gray-600 rounded-md p-3 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-200"
+              className="w-full bg-gray-900 border border-gray-700 rounded-md p-3 text-white focus:ring-2 focus:ring-[#A100FF] focus:border-[#A100FF] transition duration-200"
               placeholder="Enter password"
               autoFocus
             />
@@ -59,7 +59,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-md shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+            className="w-full bg-[#A100FF] hover:bg-[#7500C0] text-white font-bold py-3 px-4 rounded-md shadow-lg transition-all duration-200"
           >
             Access Application
           </button>

@@ -1,0 +1,11 @@
+:root {
+  /* Defining Accenture color palette */
+  --acn-main-purple: #A100FF;
+  --acn-dark-purple: #7500C0;
+  --acn-darkest-purple: #460073;
+  --acn-light-purple: #C2A3FF;
+  --acn-lightest-purple: #E6DCFF;
+  --acn-light-gray: #F1F1EF;
+  --acn-gray: #CFCFCF;
+  --acn-dark-gray: #818180;
+}

@@ -10,6 +10,10 @@ import MarkdownViewer from './components/MarkdownViewer';
 import LoginScreen from './components/LoginScreen';
 import ReportView from './components/ReportView';
 import AlertModal from './components/AlertModal';
+import Navbar from './components/Navbar';
+import About from './components/About';
+import Tooltip from './components/Tooltip';
+import './index.css';
 
 const MAX_PROMPTS = 5;
 const MAX_ITERATIONS = 5;
@@ -62,22 +66,11 @@ const calculateCitationUniqueness = (currentIteration: IterationResult, seenUrls
 
 const LoadingSpinner: React.FC = () => (
   <div className="flex justify-center items-center">
-    <svg className="animate-spin -ml-1 mr-3 h-8 w-8 text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <svg className="animate-spin -ml-1 mr-3 h-8 w-8 text-[var(--acn-light-purple)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
     </svg>
     <span className="text-lg text-gray-300">Analyzing...</span>
-  </div>
-);
-
-const Tooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="group relative flex items-center justify-center cursor-help">
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 hover:text-sky-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 p-4 bg-gray-800 text-xs text-gray-300 rounded-lg shadow-2xl border border-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[100]">
-      {children}
-    </div>
   </div>
 );
 
@@ -88,6 +81,9 @@ const App: React.FC = () => {
   const [context, setContext] = useState<string>("");
   const [isContextEnabled, setIsContextEnabled] = useState<boolean>(true);
   const [useSearch, setUseSearch] = useState<boolean>(false);
+  const [isTargetUrlEnabled, setIsTargetUrlEnabled] = useState<boolean>(true);
+  const [targetUrl, setTargetUrl] = useState<string>('');
+  const [isTargetUrlValid, setIsTargetUrlValid] = useState<boolean>(true);
   const [isExpandedSearch, setIsExpandedSearch] = useState<boolean>(false);
   const [expandedSearchOptions, setExpandedSearchOptions] = useState<ExpandedSearchOptions>({
     lowercase: true,
@@ -105,6 +101,9 @@ const App: React.FC = () => {
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
   const [dailyUsageCount, setDailyUsageCount] = useState<number>(0);
   
+  // Page navigation state
+  const [currentPage, setCurrentPage] = useState<'home' | 'about'>('home');
+
   // Auth State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
@@ -186,6 +185,16 @@ const App: React.FC = () => {
     setDailyUsageCount(getDailyUsageCount());
   }, []);
   
+  useEffect(() => {
+    if (!isTargetUrlEnabled || targetUrl.trim() === '') {
+        setIsTargetUrlValid(true);
+        return;
+    }
+    // Simple regex to check for something like domain.tld. Allows for subdomains.
+    const urlRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    setIsTargetUrlValid(urlRegex.test(targetUrl.trim()));
+  }, [targetUrl, isTargetUrlEnabled]);
+
   const handleLogin = () => {
     sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
     setIsAuthenticated(true);
@@ -227,6 +236,8 @@ const App: React.FC = () => {
       setContext(session.context || "");
       setIsContextEnabled(session.isContextEnabled !== false);
       setUseSearch(session.useSearch ?? false);
+      setIsTargetUrlEnabled(session.isTargetUrlEnabled ?? true);
+      setTargetUrl(session.targetUrl || '');
       setIsExpandedSearch(session.isExpandedSearch ?? false);
       if (session.expandedSearchOptions) {
         setExpandedSearchOptions(session.expandedSearchOptions);
@@ -262,6 +273,8 @@ const App: React.FC = () => {
     setContext("");
     setIsContextEnabled(true);
     setUseSearch(false);
+    setIsTargetUrlEnabled(true);
+    setTargetUrl('');
     setIsExpandedSearch(false);
     setCurrentSessionId(null);
     setSelectedPersonaId("");
@@ -667,6 +680,8 @@ const App: React.FC = () => {
       context: context,
       isContextEnabled: isContextEnabled,
       useSearch: useSearch,
+      isTargetUrlEnabled: isTargetUrlEnabled,
+      targetUrl: targetUrl,
       isExpandedSearch: isExpandedSearch,
       expandedSearchOptions: expandedSearchOptions,
       personaId: selectedPersonaId,
@@ -698,7 +713,7 @@ const App: React.FC = () => {
   
   // Render Main Dashboard
   return (
-    <div className="h-screen bg-gray-900 text-white font-sans flex flex-col md:flex-row overflow-hidden relative">
+    <div className="h-screen bg-[#141414] text-white font-sans flex flex-col overflow-hidden relative">
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
@@ -762,320 +777,380 @@ const App: React.FC = () => {
          </span>
       </div>
 
-      <HistorySidebar
-        history={history}
-        analysisHistory={analysisHistory}
-        currentSessionId={currentSessionId}
-        onLoadSession={handleLoadSession}
-        onDeleteSession={handleDeleteSession}
-        onNewSession={handleNewSession}
-        onViewReport={handleOpenReport}
-        isMultiSelectMode={isMultiSelectMode}
-        onToggleMultiSelect={handleToggleMultiSelect}
-        selectedSessionIds={selectedSessionIds}
-        onSessionSelect={handleSessionSelect}
-        onAnalyzeSelectedSessions={handleAnalyzeSelectedSessions}
-        onLoadMultiSessionAnalysis={handleLoadMultiSessionAnalysis}
-        onDeleteMultiSessionAnalysis={handleDeleteMultiSessionAnalysis}
-      />
-      <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 overflow-y-auto custom-scrollbar relative">
-        <div className="w-full max-w-3xl mx-auto flex-grow">
-          <header className="text-center mb-8">
-              <h1 className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-500">
-                  Gemini Keyword Analyzer
-              </h1>
-              <p className="mt-3 text-lg text-gray-400">
-                  Test if Gemini's responses contain a specific keyword or phrase over multiple iterations.
-              </p>
-          </header>
+      <Navbar currentPage={currentPage} onNavigate={setCurrentPage} />
+      
+      <div className="flex flex-1 overflow-hidden">
+        {currentPage === 'home' && (
+          <HistorySidebar
+            history={history}
+            analysisHistory={analysisHistory}
+            currentSessionId={currentSessionId}
+            onLoadSession={handleLoadSession}
+            onDeleteSession={handleDeleteSession}
+            onNewSession={handleNewSession}
+            onViewReport={handleOpenReport}
+            isMultiSelectMode={isMultiSelectMode}
+            onToggleMultiSelect={handleToggleMultiSelect}
+            selectedSessionIds={selectedSessionIds}
+            onSessionSelect={handleSessionSelect}
+            onAnalyzeSelectedSessions={handleAnalyzeSelectedSessions}
+            onLoadMultiSessionAnalysis={handleLoadMultiSessionAnalysis}
+            onDeleteMultiSessionAnalysis={handleDeleteMultiSessionAnalysis}
+          />
+        )}
+        <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar relative">
+          {currentPage === 'home' ? (
+            <div className="w-full max-w-3xl mx-auto flex-grow p-4 sm:p-6 lg:p-8">
+              <header className="text-center mb-8">
+                  <h1 className={"text-4xl sm:text-5xl font-bold text-[var(--acn-light-purple)]"}>
+                      Gemini Keyword Analyzer
+                  </h1>
+                  <p className="mt-3 text-lg text-gray-400">
+                      Test if Gemini's responses contain a specific keyword or phrase over multiple iterations.
+                  </p>
+              </header>
 
-          <main className="space-y-6">
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 p-6 rounded-xl shadow-lg space-y-6">
-              <div>
-                <label htmlFor="keyword" className="block text-sm font-medium text-sky-300 mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span>Keyword to Find</span>
-                    <Tooltip>
-                      <p className="mb-2">This is the keyword or phrase that the analyzer will search for in the response text. Enable the 'Expanded Search' option below to include common search query variants of this phase.</p>
-                      <p>Example: "sky's the limit" would expand to include, for instance, "skysthelimit" (no spaces), "Sky's The Limit" (capitalize), "skys the limit" (no apostrophe), and so on</p>
-                    </Tooltip>
-                  </div>
-                </label>
-                <input
-                  id="keyword"
-                  type="text"
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  placeholder="e.g., sky's the limit"
-                  className="w-full bg-gray-900 border border-gray-600 rounded-md p-3 text-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-200"
-                />
-              </div>
-
-              {/* Expanded Search Toggle */}
-              <div>
-                <div className="flex justify-between items-center">
-                  <label htmlFor="expand-search-toggle" className="block text-sm font-medium text-sky-300">
-                    <div className="flex items-center space-x-2">
-                      <span>Enable Expanded Search</span>
-                       <Tooltip>
-                          <p>Expand the keyword search to include common variations, such as different casing, spacing, or domain extensions.</p>
-                       </Tooltip>
-                    </div>
-                  </label>
-                  <label htmlFor="expand-search-toggle" className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      id="expand-search-toggle" 
-                      className="sr-only peer"
-                      checked={isExpandedSearch}
-                      onChange={() => setIsExpandedSearch(!isExpandedSearch)}
+              <main className="space-y-6">
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-[#460073]/50 p-6 rounded-xl shadow-lg space-y-6">
+                  <div>
+                    <label htmlFor="keyword" className="block text-sm font-medium text-[var(--acn-light-purple)] mb-2">
+                      <div className="flex items-center space-x-2">
+                        <span>Keyword to Find</span>
+                        <Tooltip>
+                          <p className="mb-2">This is the keyword or phrase that the analyzer will search for in the response text. Enable the 'Expanded Search' option below to include common search query variants of this phase.</p>
+                          <p>Example: "sky's the limit" would expand to include, for instance, "skysthelimit" (no spaces), "Sky's The Limit" (capitalize), "skys the limit" (no apostrophe), and so on</p>
+                        </Tooltip>
+                      </div>
+                    </label>
+                    <input
+                      id="keyword"
+                      type="text"
+                      value={keyword}
+                      onChange={(e) => setKeyword(e.target.value)}
+                      placeholder="e.g., sky's the limit"
+                      className="w-full bg-gray-900 border border-gray-600 rounded-md p-3 text-gray-200 focus:ring-2 focus:ring-[var(--acn-light-purple)] focus:border-[var(--acn-light-purple)] transition duration-200"
                     />
-                    <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-sky-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
-                  </label>
-                </div>
-                <div className={`accordion-content ${isExpandedSearch ? 'expanded !pb-0' : ''}`}>
-                  <div className="pt-4 pl-2 border-t border-gray-700/50">
-                    <p className="text-xs text-gray-400 mb-3">Select which keyword variations to include in the analysis:</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
-                      <label className="flex items-center space-x-3 text-gray-300 cursor-pointer">
-                        <input type="checkbox" checked={expandedSearchOptions.lowercase} onChange={() => handleExpandedSearchOptionsChange('lowercase')} className="w-4 h-4 text-sky-600 bg-gray-700 border-gray-600 rounded focus:ring-sky-500" />
-                        <span>lowercase</span>
+                  </div>
+
+                  {/* Expanded Search Toggle */}
+                  <div>
+                    <div className="flex justify-between items-center">
+                      <label htmlFor="expand-search-toggle" className="block text-sm font-medium text-[var(--acn-light-purple)]">
+                        <div className="flex items-center space-x-2">
+                          <span>Enable Expanded Search</span>
+                          <Tooltip>
+                              <p>Expand the keyword search to include common variations, such as different casing, spacing, or domain extensions.</p>
+                          </Tooltip>
+                        </div>
                       </label>
-                      <label className="flex items-center space-x-3 text-gray-300 cursor-pointer">
-                        <input type="checkbox" checked={expandedSearchOptions.capitalize} onChange={() => handleExpandedSearchOptionsChange('capitalize')} className="w-4 h-4 text-sky-600 bg-gray-700 border-gray-600 rounded focus:ring-sky-500" />
-                        <span>Capitalize</span>
+                      <label htmlFor="expand-search-toggle" className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          id="expand-search-toggle" 
+                          className="sr-only peer"
+                          checked={isExpandedSearch}
+                          onChange={() => setIsExpandedSearch(!isExpandedSearch)}
+                        />
+                        <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-[#7500C0] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--acn-light-purple)]"></div>
                       </label>
-                      <label className="flex items-center space-x-3 text-gray-300 cursor-pointer">
-                        <input type="checkbox" checked={expandedSearchOptions.removeApostrophes} onChange={() => handleExpandedSearchOptionsChange('removeApostrophes')} className="w-4 h-4 text-sky-600 bg-gray-700 border-gray-600 rounded focus:ring-sky-500" />
-                        <span>remove apostrophes</span>
-                      </label>
-                      <label className="flex items-center space-x-3 text-gray-300 cursor-pointer">
-                        <input type="checkbox" checked={expandedSearchOptions.noSpaces} onChange={() => handleExpandedSearchOptionsChange('noSpaces')} className="w-4 h-4 text-sky-600 bg-gray-700 border-gray-600 rounded focus:ring-sky-500" />
-                        <span>no spaces</span>
-                      </label>
-                      <label className="flex items-center space-x-3 text-gray-300 cursor-pointer">
-                        <input type="checkbox" checked={expandedSearchOptions.website} onChange={() => handleExpandedSearchOptionsChange('website')} className="w-4 h-4 text-sky-600 bg-gray-700 border-gray-600 rounded focus:ring-sky-500" />
-                        <span>website (.org, .com, .net)</span>
-                      </label>
-                      <div className="flex items-center space-x-2 text-gray-500 cursor-not-allowed">
-                          <input type="checkbox" checked={expandedSearchOptions.partial} disabled className="w-4 h-4 bg-gray-800 border-gray-600 rounded cursor-not-allowed" />
-                          <span>Partial</span>
-                          <Tooltip><p>Disabled for now.</p></Tooltip>
+                    </div>
+                    <div className={`accordion-content ${isExpandedSearch ? 'expanded !pb-0' : ''}`}>
+                      <div className="pt-4 pl-2 border-t border-gray-700/50">
+                        <p className="text-xs text-gray-400 mb-3">Select which keyword variations to include in the analysis:</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                          <label className="flex items-center space-x-3 text-gray-300 cursor-pointer">
+                            <input type="checkbox" checked={expandedSearchOptions.lowercase} onChange={() => handleExpandedSearchOptionsChange('lowercase')} className="w-4 h-4 text-[var(--acn-light-purple)] bg-gray-700 border-gray-600 rounded focus:ring-[#7500C0]" />
+                            <span>lowercase</span>
+                          </label>
+                          <label className="flex items-center space-x-3 text-gray-300 cursor-pointer">
+                            <input type="checkbox" checked={expandedSearchOptions.capitalize} onChange={() => handleExpandedSearchOptionsChange('capitalize')} className="w-4 h-4 text-[var(--acn-light-purple)] bg-gray-700 border-gray-600 rounded focus:ring-[#7500C0]" />
+                            <span>Capitalize</span>
+                          </label>
+                          <label className="flex items-center space-x-3 text-gray-300 cursor-pointer">
+                            <input type="checkbox" checked={expandedSearchOptions.removeApostrophes} onChange={() => handleExpandedSearchOptionsChange('removeApostrophes')} className="w-4 h-4 text-[var(--acn-light-purple)] bg-gray-700 border-gray-600 rounded focus:ring-[#7500C0]" />
+                            <span>remove apostrophes</span>
+                          </label>
+                          <label className="flex items-center space-x-3 text-gray-300 cursor-pointer">
+                            <input type="checkbox" checked={expandedSearchOptions.noSpaces} onChange={() => handleExpandedSearchOptionsChange('noSpaces')} className="w-4 h-4 text-[var(--acn-light-purple)] bg-gray-700 border-gray-600 rounded focus:ring-[#7500C0]" />
+                            <span>no spaces</span>
+                          </label>
+                          <label className="flex items-center space-x-3 text-gray-300 cursor-pointer">
+                            <input type="checkbox" checked={expandedSearchOptions.website} onChange={() => handleExpandedSearchOptionsChange('website')} className="w-4 h-4 text-[var(--acn-light-purple)] bg-gray-700 border-gray-600 rounded focus:ring-[#7500C0]" />
+                            <span>website (.org, .com, .net)</span>
+                          </label>
+                          <div className="flex items-center space-x-2 text-gray-500 cursor-not-allowed">
+                              <input type="checkbox" checked={expandedSearchOptions.partial} disabled className="w-4 h-4 bg-gray-800 border-gray-600 rounded cursor-not-allowed" />
+                              <span>Partial</span>
+                              <Tooltip><p>Disabled for now.</p></Tooltip>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Context / Persona Section */}
-              <div>
-                <div className="flex justify-between items-center">
-                  <label htmlFor="context-toggle" className="block text-sm font-medium text-sky-300">
-                    <div className="flex items-center space-x-2">
-                      <span>Provide Additional Context (System Instruction)</span>
-                      <Tooltip>
-                        <p className="mb-2">
-                          <a href="https://ai.google.dev/gemini-api/docs/text-generation#system-instructions" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline">System Instructions</a> are additional inputs that provide context to the AI model on how to behave, in what format to response, and what information is important to inform the response.
-                        </p>
-                        <p className="mb-2">
-                          In this case, it provides us with an option to try to simulate how the Gemini model would respond for various user personas. This can be helpful to consider user demographics, context behind searches, or other information that your platform (or Google) may already have about a user.
-                        </p>
-                        <p><strong className="text-sky-400">Developer Note:</strong> This is not a perfect solution for replicating what a user might see when sending prompts to various AI search engine platforms. For now, though, it can be helpful to get an idea for how web search results might differ based on a user's location or age range, for example.</p>
-                      </Tooltip>
+                  {/* Context / Persona Section */}
+                  <div>
+                    <div className="flex justify-between items-center">
+                      <label htmlFor="context-toggle" className="block text-sm font-medium text-[var(--acn-light-purple)]">
+                        <div className="flex items-center space-x-2">
+                          <span>Provide Additional Context (System Instruction)</span>
+                          <Tooltip>
+                            <p className="mb-2">
+                              <a href="https://ai.google.dev/gemini-api/docs/text-generation#system-instructions" target="_blank" rel="noopener noreferrer" className="text-[#C2A3FF] hover:underline">System Instructions</a> are additional inputs that provide context to the AI model on how to behave, in what format to response, and what information is important to inform the response.
+                            </p>
+                            <p className="mb-2">
+                              In this case, it provides us with an option to try to simulate how the Gemini model would respond for various user personas. This can be helpful to consider user demographics, context behind searches, or other information that your platform (or Google) may already have about a user.
+                            </p>
+                            <p><strong className="text-[#C2A3FF]">Developer Note:</strong> This is not a perfect solution for replicating what a user might see when sending prompts to various AI search engine platforms. For now, though, it can be helpful to get an idea for how web search results might differ based on a user's location or age range, for example.</p>
+                          </Tooltip>
+                        </div>
+                      </label>
+                      <label htmlFor="context-toggle" className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          id="context-toggle" 
+                          className="sr-only peer"
+                          checked={isContextEnabled}
+                          onChange={() => setIsContextEnabled(!isContextEnabled)}
+                        />
+                        <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-[#7500C0] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--acn-light-purple)]"></div>
+                      </label>
                     </div>
-                  </label>
-                  <label htmlFor="context-toggle" className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      id="context-toggle" 
-                      className="sr-only peer"
-                      checked={isContextEnabled}
-                      onChange={() => setIsContextEnabled(!isContextEnabled)}
-                    />
-                    <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-sky-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
-                  </label>
-                </div>
-                <div className={`accordion-content ${isContextEnabled ? 'expanded accordion-textarea' : ''}`}>
-                    <div className="pt-4 space-y-4">
-                        <div>
-                           <div className="flex items-center space-x-2 mb-2">
-                              <label htmlFor="persona-select" className="block text-sm font-medium text-gray-400">
-                                Select a Persona or write your own:
-                              </label>
-                              <div className="group relative flex items-center justify-center cursor-help">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 hover:text-sky-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 p-4 bg-gray-800 text-xs text-gray-300 rounded-lg shadow-2xl border border-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[100]">
-                                  <p className="mb-2"><strong className="text-sky-400">Persona</strong>: a description of a target audience member.</p>
-                                  <p className="mb-2">Typically, personas detail demographic information and product usage behavior to help product stakeholders better understand the context surrounding their average users or target audience.</p>
-                                  <p className="mb-2">In this case, the default personas describe underrepresented entrepreneur users most likely to be utilizing the Sky's The Limit website for help with finding mentorship and grant opportunities.</p>
-                                  <p>Feel free to modify the default personas or create your own.</p>
+                    <div className={`accordion-content ${isContextEnabled ? 'expanded accordion-textarea' : ''}`}>
+                        <div className="pt-4 space-y-4">
+                            <div>
+                              <div className="flex items-center space-x-2 mb-2">
+                                  <label htmlFor="persona-select" className="block text-sm font-medium text-gray-400">
+                                    Select a Persona or write your own:
+                                  </label>
+                                  <div className="group relative flex items-center justify-center cursor-help">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 hover:text-[#C2A3FF] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 p-4 bg-gray-800 text-xs text-gray-300 rounded-lg shadow-2xl border border-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[100]">
+                                      <p className="mb-2"><strong className="text-[#C2A3FF]">Persona</strong>: a description of a target audience member.</p>
+                                      <p className="mb-2">Typically, personas detail demographic information and product usage behavior to help product stakeholders better understand the context surrounding their average users or target audience.</p>
+                                      <p className="mb-2">In this case, the default personas describe underrepresented entrepreneur users most likely to be utilizing the Sky's The Limit website for help with finding mentorship and grant opportunities.</p>
+                                      <p>Feel free to modify the default personas or create your own.</p>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
-                          <select
-                            id="persona-select"
-                            value={selectedPersonaId}
-                            onChange={handlePersonaSelect}
-                            className="w-full bg-gray-900 border border-gray-600 rounded-md p-3 text-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-200"
-                          >
-                            <option value="">-- Custom / No Persona --</option>
-                            <optgroup label="Default Personas">
-                              {DEFAULT_PERSONAS.map(p => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
-                              ))}
-                            </optgroup>
-                            {customPersonas.length > 0 && (
-                                <optgroup label="My Saved Personas">
-                                  {customPersonas.map(p => (
+                              <select
+                                id="persona-select"
+                                value={selectedPersonaId}
+                                onChange={handlePersonaSelect}
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md p-3 text-gray-200 focus:ring-2 focus:ring-[var(--acn-light-purple)] focus:border-[var(--acn-light-purple)] transition duration-200"
+                              >
+                                <option value="">-- Custom / No Persona --</option>
+                                <optgroup label="Default Personas">
+                                  {DEFAULT_PERSONAS.map(p => (
                                     <option key={p.id} value={p.id}>{p.name}</option>
                                   ))}
                                 </optgroup>
+                                {customPersonas.length > 0 && (
+                                    <optgroup label="My Saved Personas">
+                                      {customPersonas.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                      ))}
+                                    </optgroup>
+                                )}
+                              </select>
+                            </div>
+                            
+                            <textarea
+                                id="context"
+                                value={context}
+                                onChange={(e) => handleContextChange(e.target.value)}
+                                placeholder="e.g., I am a small business owner looking for marketing advice..."
+                                rows={3}
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md p-3 text-gray-200 focus:ring-2 focus:ring-[var(--acn-light-purple)] focus:border-[var(--acn-light-purple)] transition duration-200"
+                            />
+                            
+                            {context.trim().length > 0 && selectedPersonaId === "" && (
+                              <div className="flex justify-end">
+                                <button
+                                  onClick={() => setIsPersonaModalOpen(true)}
+                                  className="text-sm flex items-center space-x-1 text-[#C2A3FF] hover:text-white transition-colors"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                  </svg>
+                                  <span>Save as Persona</span>
+                                </button>
+                              </div>
                             )}
-                          </select>
                         </div>
-                        
-                        <textarea
-                            id="context"
-                            value={context}
-                            onChange={(e) => handleContextChange(e.target.value)}
-                            placeholder="e.g., I am a small business owner looking for marketing advice..."
-                            rows={3}
-                            className="w-full bg-gray-900 border border-gray-600 rounded-md p-3 text-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-200"
-                        />
-                        
-                        {context.trim().length > 0 && selectedPersonaId === "" && (
-                          <div className="flex justify-end">
-                            <button
-                              onClick={() => setIsPersonaModalOpen(true)}
-                              className="text-sm flex items-center space-x-1 text-sky-400 hover:text-sky-300 transition-colors"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                              </svg>
-                              <span>Save as Persona</span>
-                            </button>
-                          </div>
-                        )}
                     </div>
-                </div>
-              </div>
+                  </div>
 
-              {/* Google Search Toggle */}
-              <div className="pt-3">
-                 <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                        </svg>
-                        <label htmlFor="search-toggle" className="block text-sm font-medium text-sky-300">
-                            Enable Google Search & Citations
-                        </label>
-                        <Tooltip>
-                          <p className="mb-2">Toggle this option to On to instruct the model to inform its answers with a web search rather than relying only on the content it was trained on.</p>
-                          <p className="mb-2">Toggling this on will enable <strong>citation results</strong>.</p>
-                          <p>Read more: <a href="https://ai.google.dev/gemini-api/docs/google-search" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline">Grounding with Google Search</a>.</p>
-                        </Tooltip>
-                    </div>
-                    <label htmlFor="search-toggle" className="relative inline-flex items-center cursor-pointer">
-                        <input 
-                            type="checkbox" 
-                            id="search-toggle" 
-                            className="sr-only peer"
-                            checked={useSearch}
-                            onChange={() => setUseSearch(!useSearch)}
-                        />
-                        <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-sky-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
-                    </label>
-                 </div>
-              </div>
-
-              {/* Prompts Section */}
-              <div className="space-y-3 border-t border-gray-700 pt-6">
-                 <div className="flex justify-between items-center">
-                    <label className="block text-sm font-medium text-sky-300">
-                      Prompts for Gemini ({prompts.length}/{MAX_PROMPTS})
-                    </label>
-                    <div className="flex items-center space-x-2">
+                  {/* Google Search Toggle */}
+                  <div className="pt-3">
+                    <div className="flex justify-between items-center">
                         <div className="flex items-center space-x-2">
-                            <label htmlFor="iterations" className="text-sm font-medium text-sky-300">Iterations</label>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[var(--acn-light-purple)]" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                            </svg>
+                            <label htmlFor="search-toggle" className="block text-sm font-medium text-[var(--acn-light-purple)]">
+                                Enable Google Search & Citations
+                            </label>
                             <Tooltip>
-                                <p className="mb-2">Indicate how many times the tool should re-run each prompt.</p>
-                                <p className="mb-2"><strong className="text-sky-400">Developer's Note:</strong> With traditional SEO, a single search query run repeatedly in a single session will almost always return the same ranking results. With agentic search engines, responses can vary greatly between iterations.</p>
-                                <p>An acknowledgement that this can partially be controlled when using models like Gemini by setting a model's <strong className="text-sky-400">temperature</strong>, as opposed to strictly web-based AI results which generally do not allow for users to change this. This feature may be updated as development progresses.</p>
+                              <p className="mb-2">Toggle this option to On to instruct the model to inform its answers with a web search rather than relying only on the content it was trained on.</p>
+                              <p className="mb-2">Toggling this on will enable <strong>citation results</strong>.</p>
+                              <p>Read more: <a href="https://ai.google.dev/gemini-api/docs/google-search" target="_blank" rel="noopener noreferrer" className="text-[#C2A3FF] hover:underline">Grounding with Google Search</a>.</p>
                             </Tooltip>
                         </div>
-                        <input
-                            id="iterations"
-                            type="number"
-                            value={iterations}
-                            onChange={handleIterationsChange}
-                            min="1"
-                            max={MAX_ITERATIONS}
-                            className="w-20 bg-gray-900 border border-gray-600 rounded-md p-2 text-center text-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-200"
-                        />
+                        <label htmlFor="search-toggle" className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                id="search-toggle" 
+                                className="sr-only peer"
+                                checked={useSearch}
+                                onChange={() => setUseSearch(!useSearch)}
+                            />
+                            <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-[#7500C0] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--acn-light-purple)]"></div>
+                        </label>
                     </div>
-                 </div>
-                {prompts.map((p, index) => (
-                  <div key={p.id} className="flex items-center space-x-2">
-                    <input
-                      value={p.value}
-                      onChange={(e) => handlePromptChange(p.id, e.target.value)}
-                      placeholder={`Prompt #${index + 1}`}
-                      className="flex-grow bg-gray-900 border border-gray-600 rounded-md p-3 text-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-200"
-                    />
-                    <button 
-                      onClick={() => handleRemovePrompt(p.id)}
-                      disabled={prompts.length <= 1}
-                      className="p-2 text-gray-400 hover:text-white hover:bg-red-500/50 rounded-full transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                      aria-label="Remove prompt"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
-                    </button>
                   </div>
-                ))}
-              </div>
 
-              {prompts.length < MAX_PROMPTS && (
-                <button onClick={handleAddPrompt} className="w-full text-sky-300 border-2 border-dashed border-gray-600 hover:border-sky-500 hover:bg-sky-500/10 rounded-md py-2 transition-all duration-200">
-                  + Add Prompt
-                </button>
-              )}
-             
-              <button
-                onClick={handleSearch}
-                disabled={isLoading || isLimitReached}
-                className="w-full flex justify-center items-center bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-md shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
-              >
-                {isLoading ? 'Analyzing...' : 'Analyze All Responses'}
-              </button>
-            </div>
+                  {/* Target URL Feature */}
+                  {useSearch && (
+                      <div className="pt-3 animate-fade-in">
+                          <div className="flex justify-between items-center">
+                              <label htmlFor="target-url-toggle" className="block text-sm font-medium text-[var(--acn-light-purple)]">
+                                  Enable Target URL
+                              </label>
+                              <label htmlFor="target-url-toggle" className="relative inline-flex items-center cursor-pointer">
+                                  <input 
+                                      type="checkbox" 
+                                      id="target-url-toggle" 
+                                      className="sr-only peer"
+                                      checked={isTargetUrlEnabled}
+                                      onChange={() => setIsTargetUrlEnabled(!isTargetUrlEnabled)}
+                                  />
+                                  <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-[#7500C0] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--acn-light-purple)]"></div>
+                              </label>
+                          </div>
+                          
+                          {isTargetUrlEnabled && (
+                            <div className="mt-4 animate-fade-in">
+                                <label htmlFor="target-url" className="block text-sm font-medium text-[var(--acn-light-purple)] mb-2">
+                                    <div className="flex items-center space-x-2">
+                                        <span>URL to Find</span>
+                                        <Tooltip>
+                                            <p>Similar to the target keyword field, this field searches for the specified URL in the model's response content. Valid examples include: google.com, skysthelimit.org, etc.</p>
+                                        </Tooltip>
+                                    </div>
+                                </label>
+                                <input
+                                    id="target-url"
+                                    type="text"
+                                    value={targetUrl}
+                                    onChange={(e) => setTargetUrl(e.target.value)}
+                                    placeholder="e.g., www.skysthelimit.org"
+                                    className={`w-full bg-gray-900 border rounded-md p-3 text-gray-200 focus:ring-2 focus:ring-[var(--acn-light-purple)] focus:border-[var(--acn-light-purple)] transition duration-200 ${!isTargetUrlValid ? 'border-red-500' : 'border-gray-600'}`}
+                                />
+                                {!isTargetUrlValid && (
+                                    <p className="mt-2 text-xs text-red-400 flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                        Please enter a valid URL format (e.g., example.com).
+                                    </p>
+                                )}
+                            </div>
+                          )}
+                      </div>
+                  )}
 
-            {error && (
-                <div className="bg-red-900/30 border border-red-500 text-red-300 p-4 rounded-xl animate-fade-in">
-                  <p><span className="font-bold">Error:</span> {error}</p>
+                  {/* Prompts Section */}
+                  <div className="space-y-3 border-t border-gray-700 pt-6">
+                    <div className="flex justify-between items-center">
+                        <label className="block text-sm font-medium text-[var(--acn-light-purple)]">
+                          Prompts for Gemini ({prompts.length}/{MAX_PROMPTS})
+                        </label>
+                        <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2">
+                                <label htmlFor="iterations" className="text-sm font-medium text-[var(--acn-light-purple)]">Iterations</label>
+                                <Tooltip>
+                                    <p className="mb-2">Indicate how many times the tool should re-run each prompt.</p>
+                                    <p className="mb-2"><strong className="text-[#C2A3FF]">Developer's Note:</strong> With traditional SEO, a single search query run repeatedly in a single session will almost always return the same ranking results. With agentic search engines, responses can vary greatly between iterations.</p>
+                                    <p>An acknowledgement that this can partially be controlled when using models like Gemini by setting a model's <strong className="text-[#C2A3FF]">temperature</strong>, as opposed to strictly web-based AI results which generally do not allow for users to change this. This feature may be updated as development progresses.</p>
+                                </Tooltip>
+                            </div>
+                            <input
+                                id="iterations"
+                                type="number"
+                                value={iterations}
+                                onChange={handleIterationsChange}
+                                min="1"
+                                max={MAX_ITERATIONS}
+                                className="w-20 bg-gray-900 border border-gray-600 rounded-md p-2 text-center text-gray-200 focus:ring-2 focus:ring-[var(--acn-light-purple)] focus:border-[var(--acn-light-purple)] transition duration-200"
+                            />
+                        </div>
+                    </div>
+                    {prompts.map((p, index) => (
+                      <div key={p.id} className="flex items-center space-x-2">
+                        <input
+                          value={p.value}
+                          onChange={(e) => handlePromptChange(p.id, e.target.value)}
+                          placeholder={`Prompt #${index + 1}`}
+                          className="flex-grow bg-gray-900 border border-gray-600 rounded-md p-3 text-gray-200 focus:ring-2 focus:ring-[var(--acn-light-purple)] focus:border-[var(--acn-light-purple)] transition duration-200"
+                        />
+                        <button 
+                          onClick={() => handleRemovePrompt(p.id)}
+                          disabled={prompts.length <= 1}
+                          className="p-2 text-gray-400 hover:text-white hover:bg-red-500/50 rounded-full transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                          aria-label="Remove prompt"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {prompts.length < MAX_PROMPTS && (
+                    <button onClick={handleAddPrompt} className="w-full text-[#C2A3FF] border-2 border-dashed border-gray-600 hover:border-[var(--acn-light-purple)] hover:bg-[var(--acn-light-purple)]/10 rounded-md py-2 transition-all duration-200">
+                      + Add Prompt
+                    </button>
+                  )}
+                
+                  <button
+                    onClick={handleSearch}
+                    disabled={isLoading || isLimitReached || (isTargetUrlEnabled && !isTargetUrlValid)}
+                    className="w-full flex justify-center items-center bg-[var(--acn-main-purple)] hover:bg-[#7500C0] text-white font-bold py-3 px-4 rounded-md shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+                  >
+                    {isLoading ? 'Analyzing...' : 'Analyze All Responses'}
+                  </button>
                 </div>
-            )}
 
-            <div className="mt-8 space-y-4">
-              {isLoading && <LoadingSpinner />}
-              {results && (
-                <>
-                  <h2 className="text-2xl font-bold text-gray-200">Analysis Results</h2>
-                  {results.map((result, index) => (
-                    <ResultCard key={index} result={result} onViewMarkdown={handleViewMarkdown} />
-                  ))}
-                </>
-              )}
+                {error && (
+                    <div className="bg-red-900/30 border border-red-500 text-red-300 p-4 rounded-xl animate-fade-in">
+                      <p><span className="font-bold">Error:</span> {error}</p>
+                    </div>
+                )}
+
+                <div className="mt-8 space-y-4">
+                  {isLoading && <LoadingSpinner />}
+                  {results && (
+                    <>
+                      <h2 className="text-2xl font-bold text-[var(--acn-light-purple)]">Analysis Results</h2>
+                      {results.map((result, index) => (
+                        <ResultCard key={index} result={result} onViewMarkdown={handleViewMarkdown} isTargetUrlEnabled={isTargetUrlEnabled} targetUrl={targetUrl} />
+                      ))}
+                    </>
+                  )}
+                </div>
+              </main>
+              
+              <footer className="mt-12 mb-6 text-center border-t border-gray-800 pt-6">
+                <p className="text-sm text-gray-500">
+                  Project build by <a href="mailto:ben.aronson@accenture.com">Ben Aronson</a>. A demo build for ACN.
+                </p>
+              </footer>
             </div>
-          </main>
-          
-          <footer className="mt-12 mb-6 text-center border-t border-gray-800 pt-6">
-            <p className="text-sm text-gray-500">
-              Project build by <a href="mailto:ben.aronson@accenture.com">Ben Aronson</a>. A demo build for ACN.
-            </p>
-          </footer>
+          ) : (
+            <About />
+          )}
         </div>
       </div>
     </div>

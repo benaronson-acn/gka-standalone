@@ -35,10 +35,10 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
     onDeleteMultiSessionAnalysis
 }) => {
   return (
-    <aside className="w-full md:w-72 lg:w-80 flex-shrink-0 bg-gray-900/50 backdrop-blur-sm border-r border-gray-700 p-4 flex flex-col max-h-screen">
+    <aside className="w-full md:w-72 lg:w-80 flex-shrink-0 bg-black/50 backdrop-blur-sm border-r border-[var(--acn-darkest-purple)] p-4 flex flex-col max-h-screen">
       <button
         onClick={onNewSession}
-        className="w-full flex items-center justify-center space-x-2 mb-4 bg-gray-700 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300"
+        className="w-full flex items-center justify-center space-x-2 mb-4 bg-[var(--acn-dark-purple)] hover:bg-[var(--acn-main-purple)] text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
@@ -47,7 +47,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
       </button>
 
       <div className="flex-grow overflow-y-auto custom-scrollbar -mr-2 pr-2">
-        <h2 className="text-xl font-bold text-gray-300 mb-2">Session History</h2>
+        <h2 className="text-xl font-bold text-[var(--acn-light-purple)] mb-2">Session History</h2>
         {history.length === 0 ? (
           <p className="text-gray-500 text-center mt-4">No history yet. Run an analysis to save it here.</p>
         ) : (
@@ -61,8 +61,8 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                   onClick={() => isMultiSelectMode ? onSessionSelect(session.id) : onLoadSession(session.id)}
                   className={`group w-full text-left p-3 rounded-lg cursor-pointer transition-all duration-200 flex items-start gap-3 ${
                     isMultiSelectMode
-                      ? isSelected ? 'bg-sky-500/30 border border-sky-500' : 'bg-gray-800 hover:bg-gray-700/80'
-                      : currentSessionId === session.id ? 'bg-sky-500/20 border border-sky-500' : 'bg-gray-800 hover:bg-gray-700'
+                      ? isSelected ? 'bg-[var(--acn-main-purple)]/20 border border-[var(--acn-main-purple)]' : 'bg-gray-900 hover:bg-gray-800'
+                      : currentSessionId === session.id ? 'bg-[var(--acn-main-purple)]/10 border border-[var(--acn-main-purple)]' : 'bg-gray-900 hover:bg-gray-800'
                   }`}
                 >
                   {isMultiSelectMode && (
@@ -71,7 +71,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                               type="checkbox"
                               checked={isSelected}
                               readOnly
-                              className="w-4 h-4 text-sky-600 bg-gray-700 border-gray-600 rounded focus:ring-0 focus:ring-offset-0 pointer-events-none"
+                              className="w-4 h-4 text-[var(--acn-main-purple)] bg-gray-700 border-gray-600 rounded focus:ring-0 focus:ring-offset-0 pointer-events-none"
                           />
                       </div>
                   )}
@@ -131,13 +131,13 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
 
         {analysisHistory.length > 0 && (
           <div className="mt-6">
-            <h2 className="text-xl font-bold text-gray-300 mb-2">Analysis History</h2>
+            <h2 className="text-xl font-bold text-[var(--acn-light-purple)] mb-2">Analysis History</h2>
             <ul className="space-y-2">
               {analysisHistory.map((analysis) => (
                 <li key={analysis.id}>
                   <div
                     onClick={() => onLoadMultiSessionAnalysis(analysis.id)}
-                    className="group w-full text-left p-3 rounded-lg cursor-pointer transition-colors duration-200 flex items-start justify-between gap-3 bg-gray-800 hover:bg-gray-700"
+                    className="group w-full text-left p-3 rounded-lg cursor-pointer transition-colors duration-200 flex items-start justify-between gap-3 bg-gray-900 hover:bg-gray-800"
                   >
                     <div className="flex-1">
                       <p className="font-semibold text-gray-200 truncate pr-2" title={analysis.keyword}>
@@ -167,11 +167,11 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
       </div>
       
       {/* View Analysis Report Button */}
-      <div className="mt-4 pt-4 border-t border-gray-700 space-y-2">
+      <div className="mt-4 pt-4 border-t border-[var(--acn-darkest-purple)] space-y-2">
         <button
           onClick={onViewReport}
           disabled={history.length === 0 || isMultiSelectMode}
-          className="w-full flex items-center justify-center space-x-2 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-800 disabled:text-gray-500"
+          className="w-full flex items-center justify-center space-x-2 bg-[var(--acn-main-purple)] hover:bg-[var(--acn-dark-purple)] text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-800 disabled:text-gray-500"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -181,7 +181,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
         <button
           onClick={onToggleMultiSelect}
           disabled={history.length < 2}
-          className="w-full flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-800 disabled:text-gray-500"
+          className="w-full flex items-center justify-center space-x-2 bg-[var(--acn-dark-purple)] hover:bg-[var(--acn-darkest-purple)] text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-800 disabled:text-gray-500"
         >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14v6m-3-3h6M3 10h18M3 14h18M3 6h18M3 18h18" />
@@ -191,7 +191,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
       </div>
 
       {isMultiSelectMode && (
-          <div className="mt-2 p-3 border border-dashed border-gray-600 rounded-lg space-y-3 animate-fade-in bg-gray-800/30">
+          <div className="mt-2 p-3 border border-dashed border-[var(--acn-dark-purple)] rounded-lg space-y-3 animate-fade-in bg-black/20">
             <p className="text-xs text-center text-gray-400">Select 2 to 3 sessions to compare.</p>
             <button
               onClick={onAnalyzeSelectedSessions}

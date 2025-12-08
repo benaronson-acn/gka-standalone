@@ -1,5 +1,5 @@
 // FIX: Removed the self-import of KeywordFoundStatus which was conflicting with its own declaration.
-export type KeywordFoundStatus = true | false;  // i recognize this isn't needed but was a copilot error, just leaving for now as it works technically
+export type KeywordFoundStatus = true | false;  // i recognize this isn't needed but a copilot error, just leaving for now as it works technically
 export type KeywordFoundStatusText = "✅ Found" | "❌ Not Found" | "N/A (Error)";
 
 export interface Citation {
@@ -47,6 +47,8 @@ export interface AnalysisSession {
   context?: string;
   isContextEnabled?: boolean;
   useSearch?: boolean;
+  isTargetUrlEnabled?: boolean;
+  targetUrl?: string;
   isExpandedSearch?: boolean;
   expandedSearchOptions?: ExpandedSearchOptions;
   personaId?: string;

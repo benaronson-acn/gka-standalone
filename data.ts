@@ -113,5 +113,7 @@ By exploring these avenues and being proactive, you significantly increase your 
   iterations: 1,
   context: "", // Assuming no context for this mock
   isContextEnabled: false,
-  useSearch: false
+  useSearch: false,
+  isTargetUrlEnabled: true,
+  targetUrl: "",
 };
