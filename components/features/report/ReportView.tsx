@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AnalysisSession, Persona } from '../types';
+import { AnalysisSession, Persona } from '../../../types';
 import SingleReportView from './SingleReportView';
 import MultiReportView from './MultiReportView';
 
@@ -20,7 +20,7 @@ const ReportView: React.FC<ReportViewProps> = ({ sessions, onBack, allPersonas }
   };
   
   return (
-    <div className="flex flex-col bg-gray-900 text-gray-100 print:overflow-visible print:h-auto print:bg-white print:text-black h-screen">
+    <div className="flex flex-col bg-[var(--charcoal-black)] text-gray-100 print:overflow-visible print:h-auto print:bg-white print:text-black h-screen">
       <style>{`
         @media print {
           body, #root, #root > div { background-color: white !important; color: black !important; height: auto !important; overflow: visible !important; display: block !important; }
@@ -32,7 +32,7 @@ const ReportView: React.FC<ReportViewProps> = ({ sessions, onBack, allPersonas }
       `}</style>
 
       {/* --- Toolbar --- */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 bg-gray-800/50 backdrop-blur-sm z-10 flex-shrink-0 print:hidden">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 bg-[var(--darker-charcoal)] backdrop-blur-sm z-10 flex-shrink-0 print:hidden">
         <button onClick={onBack} className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
           <span className="font-medium">Back to Dashboard</span>

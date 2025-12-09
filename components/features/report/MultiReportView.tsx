@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { AnalysisSession, AnalysisResult, IterationResult, Persona } from '../types';
-import AdvancedAnalysis from './AdvancedAnalysis';
-import Tooltip from './Tooltip';
+import { AnalysisSession, AnalysisResult, IterationResult, Persona } from '../../../types';
+import AdvancedAnalysis from '../analysis/AdvancedAnalysis';
+import Tooltip from '../../ui/Tooltip';
 
 // --- SHARED HELPERS & COMPONENTS ---
 
@@ -104,7 +104,7 @@ const SessionColumn: React.FC<{ session: AnalysisSession; allPersonas?: Persona[
     };
 
     return (
-        <div className="bg-black/50 backdrop-blur-sm border border-[var(--acn-darkest-purple)] rounded-xl shadow-lg flex flex-col space-y-4 p-4 h-full">
+        <div className="bg-[var(--very-dark-purple)] backdrop-blur-sm border border-[var(--acn-darkest-purple)] rounded-xl shadow-lg flex flex-col space-y-4 p-4 h-full">
             <div className="text-center pb-3 border-b border-[var(--acn-dark-purple)]/50">
                 <p className="text-sm text-gray-400">Session from {session.timestamp}</p>
                 <p className={`text-4xl font-bold mt-1 ${getSuccessColor(stats.successRate)}`}>{stats.successRate}%</p>
@@ -150,12 +150,12 @@ const SessionColumn: React.FC<{ session: AnalysisSession; allPersonas?: Persona[
             </div>
 
             {/* Prompts Accordion */}
-            <div className="border-t border-[var(--acn-dark-purple)]/50 pt-3">
+            <div className="border-t border-[var(--acn-dark-purple)]/50 pt-4 pb-2">
                 <button onClick={() => setIsPromptsExpanded(!isPromptsExpanded)} className="w-full flex justify-between items-center text-left">
                     <h4 className="text-sm font-bold text-[var(--acn-light-purple)] uppercase">Prompts ({session.prompts.length})</h4>
                     <ChevronIcon className={`h-5 w-5 text-gray-400 ${isPromptsExpanded ? 'rotate-180' : ''}`} />
                 </button>
-                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isPromptsExpanded ? 'max-h-[2000px] mt-2' : 'max-h-0'}`}>
+                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isPromptsExpanded ? 'max-h-[2000px] mt-4' : 'max-h-0'}`}>
                     <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar pr-1">
                         {session.results.map(res => <MultiPromptAccordion key={res.promptNumber} result={res} />)}
                     </div>
@@ -182,12 +182,13 @@ const SessionColumn: React.FC<{ session: AnalysisSession; allPersonas?: Persona[
                             <span className="font-mono text-lg">{stats.avgAppearance.toFixed(2)}</span>
                         </div>
                     </div>
-                    <div className="space-y-2 max-h-[30vh] overflow-y-auto custom-scrollbar pr-1 border-t border-[var(--acn-dark-purple)]/50 pt-2">
+                    {/* Unique Citations List */}
+                    <div className="space-y-2 max-h-[30vh] overflow-y-auto custom-scrollbar pr-1 bg-[var(--charcoal-black)] border-t border-[var(--acn-dark-purple)]/50 pt-2">
                         {stats.uniqueCitations.length > 0 ? (
                             <table className="w-full text-xs">
                                 <thead>
                                     <tr className="text-left text-gray-500">
-                                        <th className="p-1 font-medium">Source</th>
+                                        <th className="p-1 font-medium">Sources</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -215,7 +216,7 @@ const MultiReportView: React.FC<{ sessions: AnalysisSession[]; allPersonas?: Per
     return (
         <div className="flex-1 p-4 md:p-8">
             <div className="max-w-7xl mx-auto space-y-6">
-                <section className="bg-black/50 backdrop-blur-sm border border-[var(--acn-darkest-purple)] rounded-xl p-4 md:p-6 text-center shadow-lg">
+                <section className="bg-[var(--very-dark-purple)] backdrop-blur-sm border border-[var(--acn-darkest-purple)] rounded-xl p-4 md:p-6 text-center shadow-lg">
                     <h2 className="text-md font-semibold text-[var(--acn-light-purple)] uppercase tracking-wider">Analysis Keyword</h2>
                     <p className="text-2xl md:text-3xl font-bold text-white font-mono mt-1 break-words">"{sessions[0].keyword}"</p>
                 </section>

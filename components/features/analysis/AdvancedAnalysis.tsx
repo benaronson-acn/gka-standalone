@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AnalysisSession, Persona, Citation } from '../types';
+import { AnalysisSession, Persona, Citation } from '../../../types';
 
 interface AdvancedAnalysisProps {
   sessions: AnalysisSession[];
@@ -167,7 +167,7 @@ const AdvancedAnalysis: React.FC<AdvancedAnalysisProps> = ({ sessions, allPerson
             case 'initial':
                 return (
                      <div className="mt-6">
-                        <button onClick={handleRunInitialAnalysis} className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold py-2 px-6 rounded-md shadow-lg transform hover:scale-105 transition-all duration-300">
+                        <button onClick={handleRunInitialAnalysis} className="bg-gradient-to-r from-[var(--acn-main-purple)] to-[var(--acn-dark-purple)] hover:from-[var(--acn-dark-purple)] hover:to-[var(--acn-darkest-purple)] text-white font-bold py-2 px-6 rounded-md shadow-lg transform hover:scale-105 transition-all duration-300">
                             Run Analysis
                         </button>
                     </div>
@@ -192,7 +192,7 @@ const AdvancedAnalysis: React.FC<AdvancedAnalysisProps> = ({ sessions, allPerson
                         >
                             {commonPrompts.map(p => <option key={p} value={p}>{p}</option>)}
                         </select>
-                        <button onClick={performPersonaCitationAnalysis} className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-2 px-6 rounded-md shadow-lg transform hover:scale-105 transition-all duration-300">
+                        <button onClick={performPersonaCitationAnalysis} className="bg-[var(--acn-main-purple)] text-white font-bold py-2 px-6 rounded-md shadow-lg transform hover:scale-105 transition-all duration-300">
                             Analyze Citations for this Prompt
                         </button>
                     </div>
@@ -204,20 +204,24 @@ const AdvancedAnalysis: React.FC<AdvancedAnalysisProps> = ({ sessions, allPerson
                 return (
                     <div className="mt-6 space-y-6">
                         <div className="text-center">
-                            <p className="text-sm text-gray-400">Showing results for prompt:</p>
-                            <p className="text-md text-sky-300 italic">"{analysisResult.prompt}"</p>
+                            <p className="text-sm text-gray-400 pb-1">Showing results for prompt:</p>
+                            <p className="text-md text-[var(--acn-light-purple)] italic">"{analysisResult.prompt}"</p>
                         </div>
                         
-                        <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4">
+                        <div className="bg-[var(--very-dark-purple)] border border-gray-700 rounded-lg p-4">
                             <h5 className="text-md font-bold text-gray-200 mb-2">Common Ground: Sources Shared Across Personas ({analysisResult.commonCitations.length})</h5>
                             {analysisResult.commonCitations.length > 0 ? (
-                                <ul className="space-y-1 text-sm list-disc list-inside">
-                                    {analysisResult.commonCitations.map(c => (
-                                        <li key={c.uri} className="text-gray-300">
-                                            <a href={c.uri} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline">{c.title}</a>
-                                        </li>
-                                    ))}
-                                </ul>
+                                <table className="w-[50%] mx-auto text-sm rounded-md overflow-hidden shadow-lg border border-[var(--acn-light-purple)]">
+                                    <tbody>
+                                        {analysisResult.commonCitations.map((c, index) => (
+                                            <tr key={c.uri} className={`text-gray-300 ${index % 2 === 0 ? 'bg-[var(--dark-purple-modal)]' : 'bg-[var(--very-dark-purple)]'} hover:bg-[var(--acn-darkest-purple)]`}>
+                                                <td className="py-2"> {/* Increased vertical spacing */}
+                                                    <a href={c.uri} target="_blank" rel="noopener noreferrer" className="text-[var(--acn-light-purple)] hover:underline">{c.title}</a>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             ) : (
                                 <p className="text-sm text-gray-500 italic">No common citation sources were found for this prompt.</p>
                             )}
@@ -225,7 +229,7 @@ const AdvancedAnalysis: React.FC<AdvancedAnalysisProps> = ({ sessions, allPerson
 
                         <div className={`grid grid-cols-1 ${gridColsClass} gap-4`}>
                             {analysisResult.personaResults.map(({ personaName, uniqueCitations }) => (
-                                <div key={personaName} className="bg-gray-900/50 border border-gray-700 rounded-lg p-4">
+                                <div key={personaName} className="bg-[var(--very-dark-purple)] border border-gray-700 rounded-lg p-4">
                                     <h5 className="text-md font-bold text-gray-200 mb-2">Unique to {personaName} ({uniqueCitations.length})</h5>
                                     {uniqueCitations.length > 0 ? (
                                         <ul className="space-y-1 text-sm list-disc list-inside">
@@ -243,7 +247,7 @@ const AdvancedAnalysis: React.FC<AdvancedAnalysisProps> = ({ sessions, allPerson
                         </div>
 
                         <div className="text-center pt-4">
-                             <button onClick={() => setAnalysisStep('selectPrompt')} className="text-sm text-sky-400 hover:text-sky-300 transition-colors">
+                             <button onClick={() => setAnalysisStep('selectPrompt')} className="text-sm text-[var(--acn-light-purple)] hover:text-[var(--acn-lightest-purple)] transition-colors">
                                 &larr; Analyze a different prompt
                              </button>
                         </div>
@@ -261,8 +265,8 @@ const AdvancedAnalysis: React.FC<AdvancedAnalysisProps> = ({ sessions, allPerson
                 onClick={() => handleAnalysisSelection(mode)}
                 className={`w-full font-medium py-2 px-4 rounded-md transition-all duration-200 border-2 ${
                     isActive
-                        ? 'bg-sky-500/20 border-sky-500 text-sky-300'
-                        : 'bg-gray-700 hover:bg-gray-600 border-transparent text-gray-200'
+                        ? 'bg-[var(--acn-dark-purple)] border-[var(--acn-lightest-purple)] text-[var(--acn-lightest-purple)] hover:bg-[var(--acn-dark-purple-hover)]'
+                        : 'bg-[var(--acn-darkest-purple)] hover:bg-[var(--acn-dark-purple-hover)] border-transparent text-gray-200'
                 }`}
             >
                 {children}
@@ -271,8 +275,8 @@ const AdvancedAnalysis: React.FC<AdvancedAnalysisProps> = ({ sessions, allPerson
     };
 
     return (
-        <section className="mt-6 md:mt-8 bg-gray-800/50 border border-gray-700 rounded-xl p-4 md:p-6 shadow-lg">
-            <h3 className="text-xl md:text-2xl font-bold text-sky-300 text-center mb-4">Additional Analysis</h3>
+        <section className="mt-6 md:mt-8 bg-[var(--very-dark-purple)] border border-[var(--acn-darkest-purple)] rounded-xl p-4 md:p-6 shadow-lg">
+            <h3 className="text-xl md:text-2xl font-bold text-[var(--acn-light-purple)] text-center mb-4">Additional Analysis</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
                 <AnalysisButton mode="citationByPersona">Citation Sources by Persona</AnalysisButton>
                 <AnalysisButton mode="sourceAuthority">Source Authority Analysis</AnalysisButton>
@@ -282,7 +286,7 @@ const AdvancedAnalysis: React.FC<AdvancedAnalysisProps> = ({ sessions, allPerson
             
             {activeAnalysis !== 'none' && (
                 <div className="mt-6 border-t border-gray-700 pt-6 animate-fade-in text-center">
-                    <h4 className="text-lg font-bold text-sky-400">{analysisInfo[activeAnalysis].title}</h4>
+                    <h4 className="text-lg font-bold text-[var(--acn-light-purple)]">{analysisInfo[activeAnalysis].title}</h4>
                     <p className="mt-2 text-sm text-gray-400 max-w-3xl mx-auto">{analysisInfo[activeAnalysis].description}</p>
                     
                     {activeAnalysis === 'citationByPersona' && renderPersonaCitationAnalysis()}

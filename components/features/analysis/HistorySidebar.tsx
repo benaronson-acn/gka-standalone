@@ -1,5 +1,5 @@
 import React from 'react';
-import { AnalysisSession, MultiSessionAnalysis } from '../types';
+import { AnalysisSession, MultiSessionAnalysis } from '../../../types';
 
 interface HistorySidebarProps {
   history: AnalysisSession[];
@@ -35,7 +35,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
     onDeleteMultiSessionAnalysis
 }) => {
   return (
-    <aside className="w-full md:w-72 lg:w-80 flex-shrink-0 bg-black/50 backdrop-blur-sm border-r border-[var(--acn-darkest-purple)] p-4 flex flex-col max-h-screen">
+    <aside className="w-full md:w-72 lg:w-80 flex-shrink-0 bg-[var(--darker-charcoal)] backdrop-blur-sm border-r border-[var(--acn-darkest-purple)] p-4 flex flex-col max-h-screen">
       <button
         onClick={onNewSession}
         className="w-full flex items-center justify-center space-x-2 mb-4 bg-[var(--acn-dark-purple)] hover:bg-[var(--acn-main-purple)] text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300"

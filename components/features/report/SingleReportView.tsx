@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { AnalysisSession, AnalysisResult, IterationResult } from '../types';
+import { AnalysisSession, AnalysisResult, IterationResult } from '../../../types';
 import { Marked } from 'marked';
 import DOMPurify from 'dompurify';
 

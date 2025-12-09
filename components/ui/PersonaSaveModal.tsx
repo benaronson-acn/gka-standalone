@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Persona } from '../types';
+import { Persona } from '../../types';
 
 interface PersonaSaveModalProps {
   isOpen: boolean;
@@ -49,9 +49,9 @@ const PersonaSaveModal: React.FC<PersonaSaveModalProps> = ({ isOpen, onClose, on
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-      <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="bg-[var(--dark-purple-modal)] border border-[var(--acn-dark-purple)] rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="p-6">
-          <h3 className="text-xl font-bold text-sky-400 mb-4">Save New Persona</h3>
+          <h3 className="text-xl font-bold text-[var(--acn-light-purple)] mb-4">Save New Persona</h3>
           
           <div className="mb-4">
             <label htmlFor="persona-name" className="block text-sm font-medium text-gray-300 mb-2">
@@ -100,7 +100,7 @@ const PersonaSaveModal: React.FC<PersonaSaveModalProps> = ({ isOpen, onClose, on
             </button>
             <button
               onClick={handleSave}
-              className={`px-4 py-2 text-white rounded-md font-medium transition-colors ${isDuplicate ? 'bg-amber-600 hover:bg-amber-500' : 'bg-sky-600 hover:bg-sky-500'}`}
+              className={`px-4 py-2 text-white rounded-md font-medium transition-colors ${isDuplicate ? 'bg-amber-600 hover:bg-amber-500' : 'bg-[var(--acn-darkest-purple)] hover:bg-[var(--acn-dark-purple-hover)]'}`}
             >
               {isDuplicate ? 'Update Persona' : 'Save Persona'}
             </button>

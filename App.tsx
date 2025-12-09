@@ -3,16 +3,16 @@ import { runGeminiPrompt, getDailyUsageCount, DAILY_LIMIT } from './services/gem
 import { calculateCosineSimilarity, calculateSetSimilarity } from './services/similarityService';
 import { AnalysisResult, KeywordFoundStatus, KeywordFoundStatusText, AnalysisSession, IterationResult, Persona, Citation, ExpandedSearchOptions, MultiSessionAnalysis } from './types';
 import { DefaultPersonas, MockSession } from './data';
-import ResultCard from './components/ResultCard';
-import HistorySidebar from './components/HistorySidebar';
-import PersonaSaveModal from './components/PersonaSaveModal';
-import MarkdownViewer from './components/MarkdownViewer';
-import LoginScreen from './components/LoginScreen';
-import ReportView from './components/ReportView';
-import AlertModal from './components/AlertModal';
-import Navbar from './components/Navbar';
-import About from './components/About';
-import Tooltip from './components/Tooltip';
+import ResultCard from './components/features/analysis/ResultCard';
+import HistorySidebar from './components/features/analysis/HistorySidebar';
+import PersonaSaveModal from './components/ui/PersonaSaveModal';
+import MarkdownViewer from './components/ui/MarkdownViewer';
+import LoginScreen from './components/ui/LoginScreen';
+import ReportView from './components/features/report/ReportView';
+import AlertModal from './components/ui/AlertModal';
+import Navbar from './components/ui/Navbar';
+import About from './components/ui/About';
+import Tooltip from './components/ui/Tooltip';
 import './index.css';
 
 const MAX_PROMPTS = 5;

@@ -8,4 +8,9 @@
   --acn-light-gray: #F1F1EF;
   --acn-gray: #CFCFCF;
   --acn-dark-gray: #818180;
+  /* Defining some custom colors for nuance */
+  --charcoal-black: #141414;
+  --darker-charcoal: #0d0d0d;
+  --dark-purple-modal: #1d0f28;
+  --very-dark-purple: #160d1e;
 }
