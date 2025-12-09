@@ -1134,7 +1134,7 @@ const App: React.FC = () => {
               
               <footer className="mt-12 mb-6 text-center border-t border-gray-800 pt-6">
                 <p className="text-sm text-gray-500">
-                  Project build by <a href="mailto:ben.aronson@accenture.com">Ben Aronson</a>. A demo build for ACN.
+                  Project build by <a href="mailto:ben.aronson@accenture.com">Ben Aronson</a>. A demo build for ACN. All rights reserved.
                 </p>
               </footer>
             </div>
