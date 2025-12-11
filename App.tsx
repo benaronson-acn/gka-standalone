@@ -3,6 +3,7 @@ import { runGeminiPrompt, getDailyUsageCount, DAILY_LIMIT } from './services/gem
 import { calculateCosineSimilarity, calculateSetSimilarity } from './services/similarityService';
 import { AnalysisResult, KeywordFoundStatus, KeywordFoundStatusText, AnalysisSession, IterationResult, Persona, Citation, ExpandedSearchOptions, MultiSessionAnalysis } from './types';
 import { DefaultPersonas, MockSession } from './data';
+import { useLocalStorage } from './components/hooks/index';
 import ResultCard from './components/features/analysis/ResultCard';
 import HistorySidebar from './components/features/analysis/HistorySidebar';
 import PersonaSaveModal from './components/ui/PersonaSaveModal';
@@ -19,6 +20,7 @@ import './index.css';
 const MAX_PROMPTS = 5;
 const MAX_ITERATIONS = 5;
 const HISTORY_KEY = 'geminiAnalysisHistory';
+const HISTORY_KEY_NU = 'geminiAnalysisHistoryNu';
 const ANALYSIS_HISTORY_KEY = 'geminiMultiAnalysisHistory';
 const PERSONA_KEY = 'geminiCustomPersonas';
 const AUTH_SESSION_KEY = 'gemini_app_auth';
@@ -117,6 +119,9 @@ const App: React.FC = () => {
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [alertModalMessage, setAlertModalMessage] = useState('');
 
+  // Import hooks
+  const [historyNu, setHistoryNu] = useLocalStorage<AnalysisSession[]>(HISTORY_KEY_NU, []);
+
   useEffect(() => {
     // Check Authentication
     if (ENABLE_AUTH_PROTECTION) {
@@ -130,28 +135,12 @@ const App: React.FC = () => {
       setIsAuthenticated(true);
     }
 
-    // Load History
-    try {
-      const storedHistory = localStorage.getItem(HISTORY_KEY);
-      let parsedHistory: AnalysisSession[] = [];
-      if (storedHistory) {
-        parsedHistory = JSON.parse(storedHistory);
-      }
-
-      // Add Mock Session if not present
-      if (!parsedHistory.some(s => s.id === MOCK_SESSION.id)) {
-        parsedHistory.push(MOCK_SESSION);
-      }
-      
-      setHistory(parsedHistory.sort((a, b) => b.id - a.id));
-    } catch (e) {
-      console.error("Failed to parse history from localStorage", e);
-      // Fallback to mock session on error
-      setHistory([MOCK_SESSION]);
-      localStorage.removeItem(HISTORY_KEY);
+    // Load Nu historyNu
+    if (!historyNu.some(s => s.id === MOCK_SESSION.id)) {
+      setHistoryNu([...historyNu, MOCK_SESSION].sort((a, b) => b.id - a.id));
     }
 
-    // Load Analysis History
+    // Load Analysis history
     try {
       const storedAnalysisHistory = localStorage.getItem(ANALYSIS_HISTORY_KEY);
       if (storedAnalysisHistory) {
@@ -217,7 +206,7 @@ const App: React.FC = () => {
   };
   
   const handleLoadSession = (id: number) => {
-    const session = history.find(s => s.id === id);
+    const session = historyNu.find(s => s.id === id);
     if (session) {
       setKeyword(session.keyword);
       setPrompts(session.prompts);
@@ -242,16 +231,7 @@ const App: React.FC = () => {
   };
 
   const handleDeleteSession = (id: number) => {
-    setHistory(prevHistory => {
-      const updatedHistory = prevHistory.filter(s => s.id !== id);
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(updatedHistory));
-      
-      if (currentSessionId === id) {
-        handleNewSession();
-      }
-      
-      return updatedHistory;
-    });
+    setHistoryNu(prevHistory => prevHistory.filter(s => s.id !== id));
   };
 
   const handleNewSession = () => {
@@ -338,10 +318,10 @@ const App: React.FC = () => {
 
   // Report Handlers
   const handleOpenReport = () => {
-    if (history.length > 0) {
+    if (historyNu.length > 0) {
       const reportSession = currentSessionId 
-        ? history.find(s => s.id === currentSessionId) || history[0]
-        : history[0];
+        ? historyNu.find(s => s.id === currentSessionId) || historyNu[0]
+        : historyNu[0];
       setSessionsForReport([reportSession]);
     } else {
       setError("Run an analysis first to generate a report.");
@@ -371,7 +351,7 @@ const App: React.FC = () => {
 
   const handleAnalyzeSelectedSessions = () => {
     if (selectedSessionIds.size >= 2 && selectedSessionIds.size <= 3) {
-      const selectedSessions = history
+      const selectedSessions = historyNu
         .filter(s => selectedSessionIds.has(s.id))
         .sort((a, b) => a.id - b.id);
       
@@ -407,7 +387,7 @@ const App: React.FC = () => {
   const handleLoadMultiSessionAnalysis = (analysisId: number) => {
     const analysis = analysisHistory.find(a => a.id === analysisId);
     if (analysis) {
-      const sessionsToReport = history.filter(s => analysis.sessionIds.includes(s.id));
+      const sessionsToReport = historyNu.filter(s => analysis.sessionIds.includes(s.id));
       if (sessionsToReport.length === analysis.sessionIds.length) {
         setSessionsForReport(sessionsToReport.sort((a,b) => a.id - b.id));
       } else {
@@ -677,9 +657,9 @@ const App: React.FC = () => {
       personaId: selectedPersonaId,
     };
 
-    setHistory(prevHistory => {
+    setHistoryNu(prevHistory => {
         const updatedHistory = [newSession, ...prevHistory];
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(updatedHistory));
+        // localStorage.setItem(HISTORY_KEY, JSON.stringify(updatedHistory));
         return updatedHistory;
     });
     setCurrentSessionId(newSession.id);
@@ -772,7 +752,7 @@ const App: React.FC = () => {
       <div className="flex flex-1 overflow-hidden">
         {currentPage === 'home' && (
           <HistorySidebar
-            history={history}
+            history={historyNu}
             analysisHistory={analysisHistory}
             currentSessionId={currentSessionId}
             onLoadSession={handleLoadSession}

@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 package-lock.json
+Dockerfile
+quickstart.sh
+SAMPLE_DELTE_LATER.md
+OBJECTIVES.md
 
 # Editor directories and files
 .vscode/*
