@@ -8,6 +8,6 @@ steps:
 # Deploy image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
-  args: ['run', 'deploy', 'gka-standalone', '--image', 'us-central1-docker.pkg.dev/gka-standalone/cloud-run-source-deploy/gka-standalone-image:$COMMIT_SHA', '--region', 'us-central1']
+  args: ['run', 'deploy', 'gka-standalone', '--image', 'us-central1-docker.pkg.dev/gka-standalone/cloud-run-source-deploy/gka-standalone-image:$COMMIT_SHA', '--region', 'us-central1', '--port', '3000']
 images: ['us-central1-docker.pkg.dev/gka-standalone/cloud-run-source-deploy/gka-standalone-image:$COMMIT_SHA']
 logsBucket: 'gs://gka-standalone_cloudbuild'
