@@ -1,5 +1,5 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'us-central1-docker.pkg.dev/gka-standalone/cloud-run-source-deploy/gka-standalone-image:tag1', '.']
-  images: ['gcr.io/gka-standalone/cloud-run-source-deploy/gka-standalone-image:tag1']
+images: ['gcr.io/gka-standalone/cloud-run-source-deploy/gka-standalone-image:tag1']
 logsBucket: 'gs://gka-standalone_cloudbuild'
