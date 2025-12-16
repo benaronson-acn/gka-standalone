@@ -1,5 +1,13 @@
 steps:
+# Build the image
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'us-central1-docker.pkg.dev/gka-standalone/cloud-run-source-deploy/gka-standalone-image:tag1', '.']
+# Push the image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/gka-standalone/cloud-run-source-deploy/gka-standalone-image:tag1']
+# Deploy image to Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'gka-standalone', '--image', 'us-central1-docker.pkg.dev/gka-standalone/cloud-run-source-deploy/gka-standalone-image:tag1', '--region', 'us-central1']
 images: ['us-central1-docker.pkg.dev/gka-standalone/cloud-run-source-deploy/gka-standalone-image:tag1']
 logsBucket: 'gs://gka-standalone_cloudbuild'
