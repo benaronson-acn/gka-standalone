@@ -2,6 +2,8 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { Citation } from "../types";
 
+const GEMINI_CLOUD_FUNCTION_PROXY_URL = "https://gemini-proxy-function-127964077132.us-central1.run.app";
+// const GEMINI_CLOUD_FUNCTION_PROXY_URL = "https://us-central1-gka-standalone.cloudfunctions.net/gemini-proxy-function"
 const MODEL_NAME = "gemini-2.5-flash";
 const USAGE_KEY = "gemini_usage_history";
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -47,6 +49,12 @@ const trackUsage = (): void => {
   }
 };
 
+
+// Extending the GenerateContentResponse to include grounding metadata
+interface CloudFunctionResponse extends GenerateContentResponse {
+  generatedText: string; // gemini-proxy-function returns this field
+  rawResponse: GenerateContentResponse; // gemini-proxy-function returns this field
+}
 // Return type for our processing function
 interface ProcessedResponse {
   text: string;
@@ -54,11 +62,22 @@ interface ProcessedResponse {
 }
 
 // Helper function to inject citations based on grounding metadata and extract citation objects
-function processResponseWithCitations(response: GenerateContentResponse): ProcessedResponse {
-  let text = response.text || "";
+function processResponseWithCitations(response: CloudFunctionResponse | GenerateContentResponse): ProcessedResponse {
+  console.log("LOG: Processing response for citations...", response);
+
+  let text: string;
+  let res: GenerateContentResponse;
+  if ("generatedText" in response) {
+    text = (response as CloudFunctionResponse).generatedText || "";
+    res = (response as CloudFunctionResponse).rawResponse;
+  } else {
+    text = (response as GenerateContentResponse).text || "";
+    res = (response as GenerateContentResponse);
+  } 
+  //let text = response.text || response.generatedText || "";
   const extractedCitations: Citation[] = [];
 
-  const candidate = response.candidates?.[0];
+  const candidate = res.candidates?.[0];
   const groundingMetadata = candidate?.groundingMetadata;
 
   if (!groundingMetadata) {
@@ -116,9 +135,13 @@ function processResponseWithCitations(response: GenerateContentResponse): Proces
 }
 
 export const runGeminiPrompt = async (prompt: string, context?: string, useSearch?: boolean): Promise<ProcessedResponse> => {
-  if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable not set.");
-  }
+  // Only use the local env var Gemini API Key in dev environ:
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  if (isDevelopment) {
+    if (!process.env.API_KEY) {
+      throw new Error("API_KEY environment variable not set.");
+    }
+  } 
 
   // Check usage limit before proceeding
   const currentUsage = getDailyUsageCount();
@@ -129,54 +152,145 @@ export const runGeminiPrompt = async (prompt: string, context?: string, useSearc
   // Track this API call
   trackUsage();
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  ////////////////////////////////////////////////////////////////////
+  // DIVERGING: The following code is for the local environment. 
+  if (isDevelopment) {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-  // Dynamically build the config object
-  const config: {
-      temperature: number,
-      thinkingConfig: { thinkingBudget: number },
-      systemInstruction?: string,
-      tools?: any[]
-    } = {
-    temperature: 0.7,
-    thinkingConfig: {
-      thinkingBudget: 0, // Disables thinking
-    },
-  };
+    // Dynamically build the config object
+    const config: {
+        temperature: number,
+        thinkingConfig: { thinkingBudget: number },
+        systemInstruction?: string,
+        tools?: any[]
+      } = {
+      temperature: 0.7,
+      thinkingConfig: {
+        thinkingBudget: 0, // Disables thinking
+      },
+    };
 
-  if (context && context.trim()) {
-    config.systemInstruction = context;
-  }
-
-  if (useSearch) {
-    config.tools = [{ googleSearch: {} }];
-  }
-
-  try {
-    const response = await ai.models.generateContent({
-      model: MODEL_NAME,
-      contents: prompt,
-      config: config,
-    });
-
-    let text = response.text;
-    if (text === undefined || text === null) {
-      throw new Error("API returned no text content.");
+    if (context && context.trim()) {
+      config.systemInstruction = context;
     }
 
-    // Apply citations and extract metadata if search was used
     if (useSearch) {
+      config.tools = [{ googleSearch: {} }];
+    }
+
+    try {
+      const response = await ai.models.generateContent({
+        model: MODEL_NAME,
+        contents: prompt,
+        config: config,
+      });
+
+      let text = response.text;
+      if (text === undefined || text === null) {
+        throw new Error("API returned no text content.");
+      }
+
+      // Apply citations and extract metadata if search was used
+      if (useSearch) {
+          return processResponseWithCitations(response);
+      }
+
+      // If search wasn't used, we return text and empty citations
+      return { text: text.trim(), citations: [] };
+
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+      if (error instanceof Error) {
+          throw new Error(`Failed to get response from Gemini: ${error.message}`);
+      }
+      throw new Error("An unknown error occurred while calling the Gemini API.");
+    }
+  } else {
+    ////////////////////////////////////////////////////////////////////
+    // DIVERGING: The following code is for production & uses google cloud function service to interact with Gemini API.
+    console.log("LOG: Attempting to run cloud function gemini service...");
+
+    // Dynamically build the config object
+    const config: {
+        temperature: number,
+        thinkingConfig: { thinkingBudget: number },
+        systemInstruction?: string,
+        tools?: any[]
+      } = {
+      temperature: 0.7,
+      thinkingConfig: {
+        thinkingBudget: 0, // Disables thinking
+      },
+    };
+
+    if (context && context.trim()) {
+      config.systemInstruction = context;
+    }
+
+    if (useSearch) {
+      config.tools = [{ googleSearch: {} }];
+    }
+
+    // Construct the payload for the Cloud Function.
+    // For some reason, the same generateContent call expects different parameters in cloud function.
+    const proxyPayload = {
+      model: MODEL_NAME,
+      prompt: prompt,
+      temperature: 0.7,
+      thinkingConfig: {
+        thinkingBudget: 0 // Disables thinking
+      },
+      systemInstruction: context && context.trim() ? context : "",
+      useSearch: useSearch || false, // Pass this flag to the proxy function,
+      config: config
+    };
+
+    console.log("LOG: Constructed proxyPayload object...", proxyPayload);
+
+    try {
+      const apiResponse = await fetch(GEMINI_CLOUD_FUNCTION_PROXY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(proxyPayload),
+      });
+
+      if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        console.error(`ERROR: Cloud Function Proxy Error (${apiResponse.status}): ${errorText}`);
+        throw new Error(`Gemini proxy service returned an error: ${errorText}`);
+      } else {
+        console.log("LOG: Cloud Function Proxy call successful.");
+      }
+
+      const response: CloudFunctionResponse = await apiResponse.json();
+
+      console.log("LOG: Cloud Function Proxy JSON response received.", response);
+
+      // Assuming the Cloud Function returns the Gemini API response directly
+      // or a processed version suitable for your application.
+      // The structure here needs to match what your Cloud Function is designed to return.
+      let text = response.generatedText; // Or response.candidates[0].content.parts[0].text if it's raw Gemini response
+      
+      if (text === undefined || text === null) {
+        throw new Error("Proxy service returned no text content.");
+      }
+
+      if (useSearch) {
         return processResponseWithCitations(response);
-    }
+      }
 
-    // If search wasn't used, we return text and empty citations
-    return { text: text.trim(), citations: [] };
+      // If search wasn't used, we return text and empty citations
+      return { text: text.trim(), citations: [] };
 
-  } catch (error) {
-    console.error("Error calling Gemini API:", error);
-    if (error instanceof Error) {
-        throw new Error(`Failed to get response from Gemini: ${error.message}`);
+    } catch (error) {
+      console.error("Error calling Gemini Proxy Cloud Function:", error);
+      if (error instanceof Error) {
+          throw new Error(`Failed to get response from Gemini (via proxy): ${error.message}`);
+      }
+      throw new Error("An unknown error occurred while calling the Gemini proxy service.");
     }
-    throw new Error("An unknown error occurred while calling the Gemini API.");
   }
+  
 };

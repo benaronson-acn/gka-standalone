@@ -15,6 +15,7 @@ quickstart.sh
 SAMPLE_DELTE_LATER.md
 OBJECTIVES.md
 Dockerfile.slim
+services/revisedGeminiService.ts
 
 # Editor directories and files
 .vscode/*
